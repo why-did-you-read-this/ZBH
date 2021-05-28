@@ -1,4 +1,4 @@
-# 1.0
+# 1.1 добавил логи
 
 import asyncio
 import random
@@ -26,7 +26,6 @@ async def on_ready():
     print('Bot Connected')
     await bot.change_presence(status=discord.Status.dnd,
                               activity=discord.Activity(type=discord.ActivityType.listening, name='_Ziggi_'))
-    await asyncio.sleep(0.1)
     print('----------')
 
 
@@ -50,7 +49,7 @@ async def on_member_join(member):
     color1 = int(color1, 16)
     global invite_author
     await member.add_roles(role)
-    print(f'{member.mention} присоединился к серверу. Добро пожаловать! 🎉')
+    print(f'{member.mention} присоединился к серверу.')
     emb = discord.Embed(description=f'{member.mention} присоединился к серверу. Добро пожаловать! 🎉',
                         color=color1)
     emb.set_footer(text=invite_author, icon_url=invite_author.avatar_url)
@@ -109,6 +108,13 @@ async def on_command_error(ctx, error):
 #
 
 # ----------------------------------------------------------------------------------------------------------------------
+@bot.command() # test test test
+@commands.has_permissions(administrator=True)
+async def test(ctx):
+    channel = discord.utils.get(ctx.message.channels, name='log-zbh')
+    await channel.message.send(f'test {channel}')
+
+
 @bot.command()  # voice mute
 @commands.has_permissions(administrator=True)
 async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
@@ -121,11 +127,11 @@ async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
     await member.edit(voice_channel=channel)  # перекидываем человека в technical
     await member.edit(voice_channel=current_channel)  # и обратно
     if reason == '':
-        print(f'{member.name} получил мут.')
+        print(f'{member.name} получил мут.\nДлительность мута в минутах: {mute_time}.')
         await ctx.send(f'{member.mention} получил мут.')
     else:
-        print(f'{member.name} получил мут. Причина: {reason}.')
-        await ctx.send(f'{member.mention} получил мут. Причина: {reason}.')
+        print(f'{member.name} получил мут. Длительность мута в минутах: {mute_time}. Причина: {reason}.')
+        await ctx.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.\nПричина: {reason}.')
     await asyncio.sleep(mute_time * 60)
     if member in muted_users_list:
         await member.remove_roles(mute_role)
@@ -146,7 +152,6 @@ async def unvmute(ctx, member: discord.Member):
     mute_role = discord.utils.get(ctx.message.guild.roles, name='mute')
     current_channel = member.voice.channel
     channel = discord.utils.get(ctx.message.guild.voice_channels, name='technical')
-    await member.remove_roles(mute_role)
     if member in muted_users_list:
         await member.remove_roles(mute_role)
         await member.edit(voice_channel=channel)
@@ -309,13 +314,13 @@ async def help(ctx):
     p = settings.prefix
     color1 = 'f37e03'
     color1 = int(color1, 16)
-    emb = discord.Embed(description="Навигация по командам, 'одинарные кавычки' в командах писать не нужно",
+    emb = discord.Embed(description="Навигация по командам \n'одинарные кавычки' в командах писать не нужно",
                         color=color1)
     emb.add_field(name=f"{p}color 'код цвета'", value='Изменение цвета', inline=False)
     emb.add_field(name=f"{p}rc", value='Рандомный цвет', inline=False)
     emb.add_field(name=f"{p}invite", value='Получить ссылку-приглашение', inline=False)
     emb.add_field(name=f"{p}banlist", value='Получить список забаненных пользователей', inline=False)
-    emb.add_field(name=f"{p} В разработке...", value='...', inline=False)
+    emb.add_field(name=f"{p}В разработке...", value='...', inline=False)
 
     await ctx.channel.send(embed=emb)
 
@@ -323,7 +328,7 @@ async def help(ctx):
 # }-------------------------------------------------------ERRORS-------------------------------------------------------{
 @clear.error
 async def clear_error(ctx, error):
-    if ctx.author.id == 399500111069315082 and isinstance(error, commands.errors.CommandError):
+    if isinstance(error, commands.errors.CommandError):
         await ctx.channel.send(f'{ctx.author.mention}, не правильный тип данных.')
     if isinstance(error, commands.MissingPermissions):
         await ctx.channel.send(f'{ctx.author.mention}, у вас не достаточно прав.')
