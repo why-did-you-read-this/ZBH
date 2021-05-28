@@ -119,7 +119,8 @@ async def test(ctx):
 async def testc(ctx):
     guild = ctx.guild.id
     channel = discord.utils.get(guild.text_channels, name="log-zbh")
-    await ctx.send(f'guild:{guild}\nchannel: {channel}')
+    await ctx.send(f'guild:{guild}')
+    await ctx.send(f'channel:{channel}')
 
 
 @bot.command()  # voice mute
