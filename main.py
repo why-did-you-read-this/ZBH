@@ -117,7 +117,7 @@ async def test(ctx):
 @bot.command() #
 @commands.has_permissions(administrator=True)
 async def testc(ctx):
-    guild = ctx.guild
+    guild = ctx.guild.id
     channel = discord.utils.get(guild.text_channels, name="log-zbh")
     await ctx.send(f'guild:{guild}\nchannel: {channel}')
 
