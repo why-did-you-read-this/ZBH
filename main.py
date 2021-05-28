@@ -117,9 +117,9 @@ async def test(ctx):
 @bot.command() #
 @commands.has_permissions(administrator=True)
 async def testc(ctx):
-    channel = discord.utils.get(ctx.guild.channels, name="Имя")
+    channel = discord.utils.get(ctx.guild.channels, name="log-zbh")
     await ctx.send(f'testc')
-    await ctx.send(f'channel:{channel}')
+    await ctx.send(f'channel: {channel}')
 
 
 @bot.command()  # voice mute
