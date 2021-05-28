@@ -111,7 +111,14 @@ async def on_command_error(ctx, error):
 @bot.command() # test test test
 @commands.has_permissions(administrator=True)
 async def test(ctx):
-    channel = discord.utils.get(ctx.message.channels, name='log-zbh')
+    await ctx.send('test')
+
+
+@bot.command() #
+@commands.has_permissions(administrator=True)
+async def testc(ctx):
+    guild = ctx.guild
+    channel = discord.utils.get(guild.text_channels, name="log-zbh")
     await ctx.send(f'test {channel}')
 
 
