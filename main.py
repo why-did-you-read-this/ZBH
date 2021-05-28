@@ -112,7 +112,7 @@ async def on_command_error(ctx, error):
 @commands.has_permissions(administrator=True)
 async def test(ctx):
     channel = discord.utils.get(ctx.message.channels, name='log-zbh')
-    await channel.message.send(f'test {channel}')
+    await channel.send(f'test {channel}')
 
 
 @bot.command()  # voice mute
