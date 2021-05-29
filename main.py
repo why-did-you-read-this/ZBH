@@ -31,10 +31,15 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    color1 = int('f37e03', 16)
     log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")
+    emb = discord.Embed(description=message.content,
+                        color=color1)
+    emb.set_footer(text=message.author, icon_url=message.author.avatar_url)
     if message.author != bot.user:
-        await log_channel.send(f'**{message.author.mention}**\n{message.content}')
-        print(f'**{message.member.name}**\n{message.content}')
+        # await log_channel.send(f'**{message.author.mention}**\n{message.content}')
+        await log_channel.send(emb)
+        print(f'[M] {message.author.name} >>> {message.content}')
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
@@ -49,8 +54,7 @@ async def on_message(message):
 async def on_member_join(member):
     channel = bot.get_channel(settings.chat_id)
     role = discord.utils.get(member.guild.roles, id=settings.human_id)
-    color1 = 'f37e03'
-    color1 = int(color1, 16)
+    color1 = int('f37e03', 16)
     global invite_author
     await member.add_roles(role)
     print(f'{member.mention} присоединился к серверу.')
