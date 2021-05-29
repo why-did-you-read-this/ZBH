@@ -46,7 +46,7 @@ async def on_message(message):
             if word in commands_clear:
                 await asyncio.sleep(5)
                 await message.delete()
-    if message.author != bot.user and message.author.id != 310848622642069504:
+    if not message.author.bot:
         emb = discord.Embed(description=message.content,
                             color=color1)
         emb.set_footer(text=message.author, icon_url=message.author.avatar_url)
