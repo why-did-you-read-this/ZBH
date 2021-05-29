@@ -32,7 +32,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")
-    await log_channel.send(f'**{message.member.mention}**\n{message.content}')
+    await log_channel.send(f'**{message.author.mention}**\n{message.content}')
     print(f'**{message.member.name}**\n{message.content}')
     if message.author == bot.user:
         content = message.content.split()
