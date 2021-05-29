@@ -33,12 +33,12 @@ async def on_ready():
 async def on_message(message):
     color1 = int('f37e03', 16)
     log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")
-    if message.author != bot.user:
-        emb = discord.Embed(description=message.content,
-                            color=color1)
-        emb.set_footer(text=message.author, icon_url=message.author.avatar_url)
-        await log_channel.send(embed=emb)
-        print(f'[M] {message.author.name} >>> {message.content}')
+    # if message.author != bot.user:
+    #     emb = discord.Embed(description=message.content,
+    #                         color=color1)
+    #     emb.set_footer(text=message.author, icon_url=message.author.avatar_url)
+    #     await log_channel.send(embed=emb)
+    #     print(f'[M] {message.author.name} >>> {message.content}')
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
@@ -46,6 +46,12 @@ async def on_message(message):
             if word in commands_clear:
                 await asyncio.sleep(5)
                 await message.delete()
+    else:
+        emb = discord.Embed(description=message.content,
+                            color=color1)
+        emb.set_footer(text=message.author, icon_url=message.author.avatar_url)
+        await log_channel.send(embed=emb)
+        print(f'[M] {message.author.name} >>> {message.content}')
     await bot.process_commands(message)
 
 
