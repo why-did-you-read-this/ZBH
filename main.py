@@ -14,7 +14,7 @@ tt = str.maketrans(dict.fromkeys(string.punctuation))  # удаление зна
 muted_users_list = []
 banned_users_list = []
 invite_author: str
-bot = commands.Bot(command_prefix=settings.prefix, intents=discord.Intents.all())
+bot = commands.Bot(command_prefix=settings.prefix, intents=discord.Intents.all(), case_insensitive=True)
 commands_clear = settings.commands_clear
 bot.remove_command('help')
 role_position = 7  # нужно для размещения ролей при использовании .color
@@ -31,6 +31,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    log_channel = ''
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
@@ -70,7 +71,7 @@ async def on_member_remove(member):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
-        await ctx.channel.send(f'{ctx.author.mention}, такой команды не смуществует.')
+        await ctx.send(f'{ctx.author.mention}, такой команды не смуществует.')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -116,15 +117,16 @@ async def test(ctx):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def testc(ctx):
-    channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
+async def test_log(ctx):
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
     await ctx.send(f'testc')
-    await channel.send(channel)
+    await log_channel.send(log_channel)
 
 
 @bot.command()  # voice mute
 @commands.has_permissions(administrator=True)
 async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
     await ctx.message.delete()
     mute_role = discord.utils.get(ctx.message.guild.roles, name='mute')
     await member.add_roles(mute_role)  # выдаю мут пользователю
@@ -134,11 +136,14 @@ async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
     await member.edit(voice_channel=channel)  # перекидываем человека в technical
     await member.edit(voice_channel=current_channel)  # и обратно
     if reason == '':
-        print(f'{member.name} получил мут.\nДлительность мута в минутах: {mute_time}.')
-        await ctx.send(f'{member.mention} получил мут.')
+        print(f'{member.name} получил мут. Длительность мута в минутах: {mute_time}.')
+        await ctx.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.')
+        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.')
     else:
         print(f'{member.name} получил мут. Длительность мута в минутах: {mute_time}. Причина: {reason}.')
         await ctx.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.\nПричина: {reason}.')
+        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.\nПричина:'
+                               f' {reason}.')
     await asyncio.sleep(mute_time * 60)
     if member in muted_users_list:
         await member.remove_roles(mute_role)
@@ -147,6 +152,7 @@ async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
         muted_users_list.remove(member)
         print(f'С {member.name} снят мут.')
         await ctx.send(f'С {member.mention} снят мут.')
+        await log_channel.send(f'С {member.mention} снят мут.')
         return
     else:
         return
@@ -155,6 +161,7 @@ async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
 @bot.command()  # voice unmute
 @commands.has_permissions(administrator=True)
 async def unvmute(ctx, member: discord.Member):
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
     await ctx.message.delete()
     mute_role = discord.utils.get(ctx.message.guild.roles, name='mute')
     current_channel = member.voice.channel
@@ -166,9 +173,12 @@ async def unvmute(ctx, member: discord.Member):
         muted_users_list.remove(member)
         print(f'С {member.name} снят мут!')
         await ctx.send(f'С {member.mention} снят мут!')
+        await log_channel.send(f'С {member.mention} снят мут!')
         return
     else:
+        print(f'У {member.mention} не было мута.')
         await ctx.send(f'У {member.mention} не было мута.')
+        await log_channel.send(f'У {member.mention} не было мута.')
         return
 
 
@@ -178,49 +188,50 @@ async def clear(ctx, amount=str(100)):
     await ctx.message.delete()
     if amount == 'all':  # не пиши тут числа, будет работать не правильно
         await ctx.channel.purge(limit=100)
-        print('Сообщения успешно удалены.')
-        await ctx.channel.send('Сообщения успешно удалены.')
+        await ctx.send('Сообщения успешно удалены.')
     else:
         amount3 = int(amount)
         if amount3 < 0:
             amount3 = amount3 * -1
-        # amount1 = int(amount)
-        # amount2 = amount1 ** 2
-        # amount3 = amount2 ** 0.5
         if 0 <= amount3 <= 100:
             await ctx.channel.purge(limit=int(amount3))
-            await ctx.channel.send('Сообщения успешно удалены.')
-            print('Сообщения успешно удалены.')
+            await ctx.send('Сообщения успешно удалены.')
         else:
             amount3 = 100
             await ctx.channel.purge(limit=int(amount3))
-            await ctx.channel.send('Сообщения успешно удалены.')
+            await ctx.send('Сообщения успешно удалены.')
 
 
 @bot.command()  # kick
 @commands.has_permissions(administrator=True)
 async def kick(ctx, member: discord.Member, *, reason=''):
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
     await ctx.message.delete()
     await member.kick(reason=reason)
     if reason == '':
-        await ctx.channel.send(f'{member.name} был кикнут с сервера.')
+        await ctx.send(f'{member.name} был кикнут с сервера.')
+        await log_channel.send(f'{member.name} был кикнут с сервера.')
         print(f'{member.name} был кикнут с сервера.')
     elif reason != '':
-        await ctx.channel.send(f'{member.name} был кикнут с сервера. Причина: {reason}.')
+        await ctx.send(f'{member.name} был кикнут с сервера. Причина: {reason}.')
+        await log_channel.send(f'{member.name} был кикнут с сервера. Причина: {reason}.')
         print(f'{member.name} был кикнут с сервера. Причина: {reason}.')
 
 
 @bot.command()  # ban
 @commands.has_permissions(administrator=True)
 async def ban(ctx, member: discord.Member, *, reason=''):
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
     await ctx.message.delete()
     await member.ban(reason=reason)
     banned_users_list.append(member.name)
     if reason == '':
-        await ctx.channel.send(f'{member.name} был забанен на сервере.')
+        await ctx.send(f'{member.name} был забанен на сервере.')
+        await log_channel.send(f'{member.name} был забанен на сервере.')
         print(f'{member.name} был забанен на сервере.')
-    elif reason != '':
-        await ctx.channel.send(f'{member.name} был забанен на сервере. Причина: {reason}.')
+    else:
+        await ctx.send(f'{member.name} был забанен на сервере. Причина: {reason}.')
+        await log_channel.send(f'{member.name} был забанен на сервере.  Причина: {reason}.')
         print(f'{member.name} был забанен на сервере. Причина: {reason}.')
 
 
@@ -228,43 +239,48 @@ async def ban(ctx, member: discord.Member, *, reason=''):
 async def banlist(ctx):
     await ctx.message.delete()
     if not banned_users_list:
-        await ctx.channel.send('Список забаненных пуст.')
-        print('Список забаненных пуст.')
+        await ctx.send('Список забаненных пуст.')
     else:
-        await ctx.channel.send(banned_users_list)
-        print('Отправлен список забаненных')
+        await ctx.send(banned_users_list)
     return
 
 
 @bot.command()  # unban
 @commands.has_permissions(administrator=True)
 async def unban(ctx):
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
     await ctx.message.delete()
     banned_users = await ctx.guild.bans()
     for ban_entry in banned_users:
         user = ban_entry.user
         banned_users_list.remove(user.name)
         await ctx.guild.unban(user)
-        await ctx.channel.send(f'{user.name} разбанен.')
+        await ctx.send(f'{user.name} разбанен.')
+        await log_channel.send(f'{user.name} разбанен.')
+        print(f'{user.name} разбанен.')
         return
 
 
 @bot.command()  # invite
 async def invite(ctx):
+    lifetime = 300
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
     await ctx.message.delete()
     channel = discord.utils.get(ctx.guild.channels, id=773951770485325875)
-    link = await channel.create_invite(max_uses=1, unique=True, max_age=300)
+    link = await channel.create_invite(max_uses=1, unique=True, max_age=lifetime)
     await ctx.message.author.send(f'**Приглашение действует 5 минут**\n{link}')
     global invite_author
     invite_author = ctx.message.author
-    await asyncio.sleep(300)
+    await log_channel.send(f'{ctx.author.mention} создал приглашение.')
+    print(f'{ctx.author.name} создал приглашение.')
+    await asyncio.sleep(lifetime)
     invite_author = ''
 
 
 @bot.command()  # ping
 async def ping(ctx):
     await ctx.message.delete()
-    await ctx.channel.send(f'Пинг: {round(bot.latency, 2)}')
+    await ctx.send(f'Пинг: {round(bot.latency, 2)}')
 
 
 @bot.command()  # random color
@@ -288,8 +304,7 @@ async def color(ctx, *, clr):
     guild = ctx.guild
     role_name = f'ZBH-clr-{clr1}'
     if discord.utils.get(ctx.author.roles, name=f'ZBH-clr-{clr1}'):
-        await ctx.channel.send('У вас уже установлен этот цвет.')
-        print(f'цвет {role_name} уже есть у {ctx.author.nick}')
+        await ctx.send('У вас уже установлен этот цвет.')
         return None  # если уже есть этот цвет
     else:
         guild_role_list = [r.name for r in guild.roles if r != ctx.guild.default_role]
@@ -319,56 +334,56 @@ async def color(ctx, *, clr):
 async def help(ctx):
     await ctx.message.delete()
     p = settings.prefix
-    color1 = 'f37e03'
-    color1 = int(color1, 16)
+    color1 = int('f37e03', 16)
     emb = discord.Embed(description="Навигация по командам \n'одинарные кавычки' в командах писать не нужно",
                         color=color1)
     emb.add_field(name=f"{p}color 'код цвета'", value='Изменение цвета', inline=False)
     emb.add_field(name=f"{p}rc", value='Рандомный цвет', inline=False)
     emb.add_field(name=f"{p}invite", value='Получить ссылку-приглашение', inline=False)
     emb.add_field(name=f"{p}banlist", value='Получить список забаненных пользователей', inline=False)
+    emb.add_field(name=f"{p}ping", value='Узнать пинг бота', inline=False)
     emb.add_field(name=f"{p}В разработке...", value='...', inline=False)
 
-    await ctx.channel.send(embed=emb)
+    await ctx.send(embed=emb)
 
 
 # }-------------------------------------------------------ERRORS-------------------------------------------------------{
 @clear.error
 async def clear_error(ctx, error):
     if isinstance(error, commands.errors.CommandError):
-        await ctx.channel.send(f'{ctx.author.mention}, не правильный тип данных.')
+        await ctx.send(f'{ctx.author.mention}, не правильный тип данных.')
     if isinstance(error, commands.MissingPermissions):
-        await ctx.channel.send(f'{ctx.author.mention}, у вас не достаточно прав.')
+        await ctx.send(f'{ctx.author.mention}, у вас не достаточно прав.')
 
 
 @color.error
 async def color_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument):
-        await ctx.channel.send(f'{ctx.author.mention}, вы не указали код цвета.')
+        await ctx.send(f'{ctx.author.mention}, вы не указали код цвета.')
 
 
 @unban.error
 async def unban_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.channel.send(f'{ctx.author.mention}, у вас не достаточно прав.')
+        await ctx.send(f'{ctx.author.mention}, у вас не достаточно прав.')
 
 
 @vmute.error
 async def vmute_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.channel.send(f'{ctx.author.mention}, у вас не достаточно прав.')
+        await ctx.send(f'{ctx.author.mention}, у вас не достаточно прав.')
 
 
 @unvmute.error
 async def unvmute_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.channel.send(f'{ctx.author.mention}, у вас не достаточно прав.')
+        await ctx.send(f'{ctx.author.mention}, у вас не достаточно прав.')
 
 
 @kick.error
 async def kick_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.channel.send(f'{ctx.author.mention}, у вас не достаточно прав.')
+        await ctx.send(f'{ctx.author.mention}, у вас не достаточно прав.')
 
 
 bot.run(os.getenv("DISCORD_TOKEN"))
