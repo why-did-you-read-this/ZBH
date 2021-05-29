@@ -21,5 +21,5 @@ perms = discord.Permissions(send_messages=True, read_messages=True, add_reaction
                             view_guild_insights=False)
 prefix = '.'
 chat_id = 773951770485325875
-log_id = 123
 human_id = 773952519256014890
+bot_id = 813379609499533353
