@@ -38,7 +38,7 @@ async def on_message(message):
     emb.set_footer(text=message.author, icon_url=message.author.avatar_url)
     if message.author != bot.user:
         # await log_channel.send(f'**{message.author.mention}**\n{message.content}')
-        await log_channel.send(emb)
+        await log_channel.send(embed=emb)
         print(f'[M] {message.author.name} >>> {message.content}')
     if message.author == bot.user:
         content = message.content.split()
