@@ -31,7 +31,9 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    log_channel = ''
+    log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")
+    await log_channel.send(f'**{message.member.mention}**\n{message.content}')
+    print(f'**{message.member.name}**\n{message.content}')
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
@@ -109,24 +111,18 @@ async def on_command_error(ctx, error):
 #
 
 # ----------------------------------------------------------------------------------------------------------------------
-@bot.command() # test test test
-@commands.has_permissions(administrator=True)
-async def test(ctx):
-    await ctx.send('test')
-
-
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def test_log(ctx):
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
-    await ctx.send(f'testc')
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
+    await ctx.send(f'test_log')
     await log_channel.send(log_channel)
 
 
 @bot.command()  # voice mute
 @commands.has_permissions(administrator=True)
 async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     mute_role = discord.utils.get(ctx.message.guild.roles, name='mute')
     await member.add_roles(mute_role)  # выдаю мут пользователю
@@ -161,7 +157,7 @@ async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
 @bot.command()  # voice unmute
 @commands.has_permissions(administrator=True)
 async def unvmute(ctx, member: discord.Member):
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     mute_role = discord.utils.get(ctx.message.guild.roles, name='mute')
     current_channel = member.voice.channel
@@ -205,7 +201,7 @@ async def clear(ctx, amount=str(100)):
 @bot.command()  # kick
 @commands.has_permissions(administrator=True)
 async def kick(ctx, member: discord.Member, *, reason=''):
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     await member.kick(reason=reason)
     if reason == '':
@@ -221,7 +217,7 @@ async def kick(ctx, member: discord.Member, *, reason=''):
 @bot.command()  # ban
 @commands.has_permissions(administrator=True)
 async def ban(ctx, member: discord.Member, *, reason=''):
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     await member.ban(reason=reason)
     banned_users_list.append(member.name)
@@ -248,7 +244,7 @@ async def banlist(ctx):
 @bot.command()  # unban
 @commands.has_permissions(administrator=True)
 async def unban(ctx):
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     banned_users = await ctx.guild.bans()
     for ban_entry in banned_users:
@@ -264,7 +260,7 @@ async def unban(ctx):
 @bot.command()  # invite
 async def invite(ctx):
     lifetime = 300
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="📃┊log-zbh")
+    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     channel = discord.utils.get(ctx.guild.channels, id=773951770485325875)
     link = await channel.create_invite(max_uses=1, unique=True, max_age=lifetime)
