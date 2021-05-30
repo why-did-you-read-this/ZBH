@@ -18,6 +18,7 @@ bot = commands.Bot(command_prefix=settings.prefix, intents=discord.Intents.all()
 commands_clear = settings.commands_clear
 bot.remove_command('help')
 role_position = 7  # нужно для размещения ролей при использовании .color
+color1 = int('f37e03', 16)
 
 
 @bot.event
@@ -31,14 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    color1 = int('f37e03', 16)
     log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")
-    # if message.author != bot.user:
-    #     emb = discord.Embed(description=message.content,
-    #                         color=color1)
-    #     emb.set_footer(text=message.author, icon_url=message.author.avatar_url)
-    #     await log_channel.send(embed=emb)
-    #     print(f'[M] {message.author.name} >>> {message.content}')
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
@@ -56,10 +50,26 @@ async def on_message(message):
 
 
 @bot.event
+async def on_member_update(before, after): # ###########################################################################
+    log_channel = discord.utils.get(before.guild.text_channels, name="log-zbh")
+    emb = discord.Embed(
+        title='Изменён ник',
+        description='Изменён ник',
+        colour=color1
+    )
+    fields = [
+        ('Было', before.display_name, False),
+        ('Стало', after.display_name, False)
+    ]
+    for name, value, inline in fields:
+        emb.add_field(name=name, value=value, inline=inline)
+    await log_channel.send(embed=emb)
+
+
+@bot.event
 async def on_member_join(member):
-    channel = bot.get_channel(settings.chat_id)
-    role = discord.utils.get(member.guild.roles, id=settings.human_id)
-    color1 = int('f37e03', 16)
+    channel = discord.utils.get(member.guild.text_channels, name="💬┊chat")
+    role = discord.utils.get(member.guild.roles, name='Human')
     global invite_author
     await member.add_roles(role)
     print(f'{member.mention} присоединился к серверу.')
@@ -72,9 +82,7 @@ async def on_member_join(member):
 
 @bot.event
 async def on_member_remove(member):
-    channel = bot.get_channel(settings.chat_id)
-    color1 = 'f37e03'
-    color1 = int(color1, 16)
+    channel = discord.utils.get(member.guild.text_channels, name="💬┊chat")
     await channel.send(
         embed=discord.Embed(description=f'{member.mention} покинул сервер. 😧',
                             color=color1))
@@ -86,41 +94,6 @@ async def on_command_error(ctx, error):
         await ctx.send(f'{ctx.author.mention}, такой команды не смуществует.')
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# @bot.command()  # cog load
-# @commands.has_permissions(administrator=True)
-# async def load(ctx, extension):
-#     await ctx.message.delete()
-#     bot.load_extension(f'cogs.{extension}')
-#     await ctx.send('Cogs is loaded...')
-#     print(f'{extension} has been loaded.')
-#
-#
-# @bot.command()  # cog unload
-# @commands.has_permissions(administrator=True)
-# async def unload(ctx, extension):
-#     await ctx.message.delete()
-#     bot.unload_extension(f'cogs.{extension}')
-#     await ctx.send('Cogs is unloaded...')
-#     print(f'{extension} has been unloaded.')
-#
-#
-# @bot.command()  # cog reload
-# @commands.has_permissions(administrator=True)
-# async def reload(ctx, extension):
-#     await ctx.message.delete()
-#     bot.unload_extension(f'cogs.{extension}')
-#     bot.load_extension(f'cogs.{extension}')
-#     await ctx.send('Cogs is reloaded...')
-#     print(f'{extension} has been reloaded.')
-#
-#
-# for filename in os.listdir('./cogs'):
-#     if filename.endswith('.py'):
-#         bot.load_extension(f'cogs.{filename[:-3]}')
-#
-
-# ----------------------------------------------------------------------------------------------------------------------
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def test_log(ctx):
@@ -340,7 +313,6 @@ async def color(ctx, *, clr):
 async def help(ctx):
     await ctx.message.delete()
     p = settings.prefix
-    color1 = int('f37e03', 16)
     emb = discord.Embed(description="Навигация по командам \n'одинарные кавычки' в командах писать не нужно",
                         color=color1)
     emb.add_field(name=f"{p}color 'код цвета'", value='Изменение цвета', inline=False)
