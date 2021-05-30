@@ -32,7 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")
+    log_channel = discord.utils.get(message.author.guild.text_channels, name="log-zbh")
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
