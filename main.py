@@ -49,7 +49,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    log_channel = discord.utils.get(message.author.guild.text_channels, name="log-zbh")  # что-то не так, смотри логи в
+    log_channel = discord.utils.get(message.member.guild.text_channels, name="log-zbh")  # что-то не так, смотри логи в
     #                                                                                      heroku
     if message.author == bot.user:
         content = message.content.split()
@@ -123,7 +123,7 @@ async def test_log(ctx):
 
 @bot.command()  # voice mute
 @commands.has_permissions(administrator=True)
-async def vmute(ctx, member: discord.Member, mute_time=TimeConverter, *, reason=None):
+async def vmute(ctx, member: discord.Member, mute_time: TimeConverter, *, reason=None):
     log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     mute_role = discord.utils.get(ctx.message.guild.roles, name='mute')
@@ -142,7 +142,7 @@ async def vmute(ctx, member: discord.Member, mute_time=TimeConverter, *, reason=
         await ctx.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.\nПричина: {reason}.')
         await log_channel.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.\nПричина:'
                                f' {reason}.')
-    await asyncio.sleep(float[mute_time])
+    await asyncio.sleep(mute_time) # warn
     if member in muted_users_list:
         await member.remove_roles(mute_role)
         await member.edit(voice_channel=channel)
