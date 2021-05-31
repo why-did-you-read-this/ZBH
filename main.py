@@ -68,8 +68,7 @@ async def on_message(message):
 
 
 @bot.event
-async def on_member_update(before,
-                           after):  # ###########################################################################
+async def on_member_update(before, after):  # ##########################################################################
     log_channel = discord.utils.get(before.guild.text_channels, name="log-zbh")
     emb = discord.Embed(
         title='Изменён ник',
@@ -82,7 +81,7 @@ async def on_member_update(before,
     ]
     for name, value, inline in fields:
         emb.add_field(name=name, value=value, inline=inline)
-    await log_channel.send(embed=emb)
+    # await log_channel.send(embed=emb)
 
 
 @bot.event
