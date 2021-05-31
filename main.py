@@ -8,17 +8,34 @@ import os
 from dotenv import load_dotenv
 from discord.ext import commands
 import settings
+import re
+from discord_components import DiscordComponents, Button, ButtonStyle
 
-load_dotenv()
+load_dotenv() # не удалять
 tt = str.maketrans(dict.fromkeys(string.punctuation))  # удаление знаков препинания: word = word.translate(tt)
 muted_users_list = []
 banned_users_list = []
 invite_author: str
 bot = commands.Bot(command_prefix=settings.prefix, intents=discord.Intents.all(), case_insensitive=True)
-commands_clear = settings.commands_clear
 bot.remove_command('help')
 role_position = 7  # нужно для размещения ролей при использовании .color
 color1 = int('f37e03', 16)
+time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
+time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
+
+
+class TimeConverter(commands.Converter):
+    async def convert(self, ctx, argument):
+        matches = time_regex.findall(argument.lower())
+        time = 0
+        for v, k in matches:
+            try:
+                time += time_dict[k] * float(v)
+            except KeyError:
+                raise commands.BadArgument(f"{k} не является форматом времени! Используйте s/m/h/d !")
+            except ValueError:
+                raise commands.BadArgument(f"{v} не является чилом!")
+        return time
 
 
 @bot.event
@@ -32,12 +49,13 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    log_channel = discord.utils.get(message.author.guild.text_channels, name="log-zbh")
+    log_channel = discord.utils.get(message.author.guild.text_channels, name="log-zbh")  # что-то не так, смотри логи в
+    #                                                                                      heroku
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
             word = word.translate(tt)
-            if word in commands_clear:
+            if word in settings.commands_clear:
                 await asyncio.sleep(5)
                 await message.delete()
     if not message.author.bot:
@@ -50,7 +68,8 @@ async def on_message(message):
 
 
 @bot.event
-async def on_member_update(before, after): # ###########################################################################
+async def on_member_update(before,
+                           after):  # ###########################################################################
     log_channel = discord.utils.get(before.guild.text_channels, name="log-zbh")
     emb = discord.Embed(
         title='Изменён ник',
@@ -104,7 +123,7 @@ async def test_log(ctx):
 
 @bot.command()  # voice mute
 @commands.has_permissions(administrator=True)
-async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
+async def vmute(ctx, member: discord.Member, mute_time=TimeConverter, *, reason=None):
     log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
     await ctx.message.delete()
     mute_role = discord.utils.get(ctx.message.guild.roles, name='mute')
@@ -114,16 +133,16 @@ async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
     channel = discord.utils.get(ctx.message.guild.voice_channels, name='technical')
     await member.edit(voice_channel=channel)  # перекидываем человека в technical
     await member.edit(voice_channel=current_channel)  # и обратно
-    if reason == '':
-        print(f'{member.name} получил мут. Длительность мута в минутах: {mute_time}.')
-        await ctx.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.')
-        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.')
+    if reason is None:
+        print(f'{member.name} получил мут. Длительность мута: {mute_time}.')
+        await ctx.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.')
+        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.')
     else:
-        print(f'{member.name} получил мут. Длительность мута в минутах: {mute_time}. Причина: {reason}.')
-        await ctx.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.\nПричина: {reason}.')
-        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута в минутах: {mute_time}.\nПричина:'
+        print(f'{member.name} получил мут. Длительность мута: {mute_time}. Причина: {reason}.')
+        await ctx.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.\nПричина: {reason}.')
+        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.\nПричина:'
                                f' {reason}.')
-    await asyncio.sleep(mute_time * 60)
+    await asyncio.sleep(float[mute_time])
     if member in muted_users_list:
         await member.remove_roles(mute_role)
         await member.edit(voice_channel=channel)
@@ -134,7 +153,7 @@ async def vmute(ctx, member: discord.Member, mute_time=float(), reason=''):
         await log_channel.send(f'С {member.mention} снят мут.')
         return
     else:
-        return
+        pass
 
 
 @bot.command()  # voice unmute
@@ -309,7 +328,7 @@ async def color(ctx, *, clr):
             await ctx.author.add_roles(clr_role)
 
 
-@bot.command() # help
+@bot.command()  # help
 async def help(ctx):
     await ctx.message.delete()
     p = settings.prefix
