@@ -69,7 +69,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    log_channel = discord.utils.get(message.author.guild.text_channels, name="log-zbh")  # что-то не так, смотри логи в
+    log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")  # что-то не так, смотри логи в
     #                                                                                      heroku
     if message.author == bot.user:
         content = message.content.split()
