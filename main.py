@@ -23,11 +23,12 @@ color1 = int('f37e03', 16)
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
 
+
 intervals = (
-    ('дней', 86400),   # 60 * 60 * 24
-    ('часов', 3600),   # 60 * 60
-    ('минут', 60),
-    ('секунд', 1)
+    ('д', 86400), # 60 * 60 * 24
+    ('ч', 3600),  # 60 * 60
+    ('м', 60),
+    ('с', 1)
 )
 
 
@@ -69,8 +70,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")  # что-то не так, смотри логи в
-    #                                                                                      heroku
+    log_channel = discord.utils.get(message.guild.text_channels, name="log-zbh")
     if message.author == bot.user:
         content = message.content.split()
         for word in content:
@@ -111,33 +111,24 @@ async def on_member_join(member):
     global invite_author
     await member.add_roles(role)
     print(f'{member.mention} присоединился к серверу.')
-    emb = discord.Embed(description=f'{member.mention} присоединился к серверу. Добро пожаловать! 🎉',
-                        color=color1)
+    emb = discord.Embed(description=f'{member.mention} присоединился к серверу. Добро пожаловать! 🎉', color=color1)
     emb.set_footer(text=invite_author, icon_url=invite_author.avatar_url)
 
     await channel.send(embed=emb)
 
 
 @bot.event
-async def on_member_remove(member):
+async def on_member_remove(member: discord.Member):
     channel = discord.utils.get(member.guild.text_channels, name="💬┊chat")
-    await channel.send(
-        embed=discord.Embed(description=f'{member.name} покинул сервер. 😧',
-                            color=color1))
+    emb = discord.Embed(description=f'{member.name} покинул сервер. 😧', color=color1)
+    emb.set_footer(text=member.name, icon_url=member.avatar_url) # error?
+    await channel.send(embed=emb)
 
 
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
         await ctx.send(f'{ctx.author.mention}, такой команды не смуществует.')
-
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def test_log(ctx):
-    log_channel = discord.utils.get(ctx.guild.text_channels, name="log-zbh")
-    await ctx.send(f'test_log')
-    await log_channel.send(log_channel)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -200,7 +191,6 @@ async def unvmute(ctx, member: discord.Member):
     else:
         print(f'У {member.mention} не было мута.')
         await ctx.send(f'У {member.mention} не было мута.')
-        await log_channel.send(f'У {member.mention} не было мута.')
         return
 
 
@@ -356,7 +346,7 @@ async def color(ctx, *, clr):
 async def help(ctx):
     await ctx.message.delete()
     p = settings.prefix
-    emb = discord.Embed(description="Навигация по командам \n'одинарные кавычки' в командах писать не нужно",
+    emb = discord.Embed(title="Список команд", description="'одинарные кавычки' в командах писать не нужно",
                         color=color1)
     emb.add_field(name=f"{p}color 'код цвета'", value='Изменение цвета', inline=False)
     emb.add_field(name=f"{p}rc", value='Рандомный цвет', inline=False)
@@ -368,7 +358,9 @@ async def help(ctx):
     await ctx.send(embed=emb)
 
 
-# }-------------------------------------------------------ERRORS-------------------------------------------------------{
+# }------------------------------------------------------ ERRORS ------------------------------------------------------{
+
+
 @clear.error
 async def clear_error(ctx, error):
     if isinstance(error, commands.errors.CommandError):
