@@ -11,7 +11,7 @@ import settings
 import re
 from discord_components import DiscordComponents, Button, ButtonStyle
 
-load_dotenv() # не удалять
+load_dotenv()  # не удалять
 tt = str.maketrans(dict.fromkeys(string.punctuation))  # удаление знаков препинания: word = word.translate(tt)
 muted_users_list = []
 banned_users_list = []
@@ -22,6 +22,26 @@ role_position = 7  # нужно для размещения ролей при и
 color1 = int('f37e03', 16)
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
+
+intervals = (
+    ('дней', 86400),   # 60 * 60 * 24
+    ('часов', 3600),   # 60 * 60
+    ('минут', 60),
+    ('секунд', 1)
+)
+
+
+def display_time(seconds, granularity=2):
+    result = []
+
+    for name, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            if value == 1:
+                name = name.rstrip('s')
+            result.append("{} {}".format(value, name))
+    return ', '.join(result[:granularity])
 
 
 class TimeConverter(commands.Converter):
@@ -34,7 +54,7 @@ class TimeConverter(commands.Converter):
             except KeyError:
                 raise commands.BadArgument(f"{k} не является форматом времени! Используйте s/m/h/d !")
             except ValueError:
-                raise commands.BadArgument(f"{v} не является чилом!")
+                raise commands.BadArgument(f"{v} не является числом!")
         return time
 
 
@@ -102,7 +122,7 @@ async def on_member_join(member):
 async def on_member_remove(member):
     channel = discord.utils.get(member.guild.text_channels, name="💬┊chat")
     await channel.send(
-        embed=discord.Embed(description=f'{member.mention} покинул сервер. 😧',
+        embed=discord.Embed(description=f'{member.name} покинул сервер. 😧',
                             color=color1))
 
 
@@ -120,6 +140,9 @@ async def test_log(ctx):
     await log_channel.send(log_channel)
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+
+
 @bot.command()  # voice mute
 @commands.has_permissions(administrator=True)
 async def vmute(ctx, member: discord.Member, mute_time: TimeConverter, *, reason=None):
@@ -132,16 +155,18 @@ async def vmute(ctx, member: discord.Member, mute_time: TimeConverter, *, reason
     channel = discord.utils.get(ctx.message.guild.voice_channels, name='technical')
     await member.edit(voice_channel=channel)  # перекидываем человека в technical
     await member.edit(voice_channel=current_channel)  # и обратно
+    mute_time = round(mute_time)
+    mute_time2 = display_time(mute_time)
     if reason is None:
-        print(f'{member.name} получил мут. Длительность мута: {mute_time}.')
-        await ctx.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.')
-        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.')
+        print(f'{member.name} получил мут. Длительность мута: {mute_time2}.')
+        await ctx.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time2}.')
+        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time2}.')
     else:
-        print(f'{member.name} получил мут. Длительность мута: {mute_time}. Причина: {reason}.')
-        await ctx.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.\nПричина: {reason}.')
-        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time}.\nПричина:'
+        print(f'{member.name} получил мут. Длительность мута: {mute_time2}. Причина: {reason}.')
+        await ctx.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time2}.\nПричина: {reason}.')
+        await log_channel.send(f'{member.mention} получил мут.\nДлительность мута: {mute_time2}.\nПричина:'
                                f' {reason}.')
-    await asyncio.sleep(mute_time) # warn
+    await asyncio.sleep(mute_time)
     if member in muted_users_list:
         await member.remove_roles(mute_role)
         await member.edit(voice_channel=channel)
